@@ -13,7 +13,7 @@
         android:width="64dp"
         android:height="64dp"
         android:text="@string/pick"
-    android:onClick="switchToFlag"
+    android:onClick="switchIcon"
     android:textAlignment="center"
         android:textSize="32sp"
         app:layout_column="0"

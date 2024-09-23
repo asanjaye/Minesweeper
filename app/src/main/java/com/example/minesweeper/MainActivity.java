@@ -13,11 +13,10 @@ import android.widget.TextView;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private int clock = 0;
-    private String icon = "flag";
+    private String icon = "pick";
     private boolean running = false;
     private static final int COLUMN_COUNT = 10;
     private static final int ROW_COUNT = 12;
@@ -61,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         placeMines();
+        cellInit();
         if (savedInstanceState != null) {
             clock = savedInstanceState.getInt("clock");
             running = savedInstanceState.getBoolean("running");
@@ -74,17 +74,57 @@ public class MainActivity extends AppCompatActivity {
             int mineLocation = random.nextInt(ROW_COUNT * COLUMN_COUNT);
             if(!mines.contains(mineLocation)){
                 mines.add(mineLocation);
+
             }
 
-            for(int curr:mines){
+            for(int curr:mines) {
                 TextView mineView = cell_tvs.get(curr);
-                mineView.setText("mine");
+                mineView.setTag("mine");
+                mineView.setBackgroundColor(Color.RED);
 //                mineView.setBackgroundColor(Color.RED);
             }
-
-
         }
     }
+    private void cellInit(){
+        for (int i =0; i<cell_tvs.size(); ++i){
+            if(!mines.contains(i)){
+                int mineCount = countMines(i);
+                if(mineCount==0){
+                    cell_tvs.get(i).setText("");
+                }
+                else {
+                    cell_tvs.get(i).setBackgroundColor(Color.BLACK);
+                    cell_tvs.get(i).setText(String.valueOf(mineCount));
+                }
+                }
+            }
+
+        }
+
+
+
+    private int countMines(int idx) {
+        int counter = 0;
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                if (i == 0 && j == 0)
+                    continue;
+
+                int cRow = (idx / COLUMN_COUNT) + i;
+                int cCol = (idx % COLUMN_COUNT) + j;
+
+                if (cRow >= 0 && cRow < ROW_COUNT && cCol >= 0 && cCol < COLUMN_COUNT) {
+                    int cIdx = cRow * COLUMN_COUNT + cCol;
+
+                    if (mines.contains(cIdx)) {
+                        counter++;
+                    }
+                }
+            }
+        }
+        return counter;
+    }
+
 
     private int findIndexOfCellTextView(TextView tv) {
         for (int n=0; n<cell_tvs.size(); n++) {
@@ -101,6 +141,22 @@ public class MainActivity extends AppCompatActivity {
         int n = findIndexOfCellTextView(tv);
         int i = n/COLUMN_COUNT;
         int j = n%COLUMN_COUNT;
+
+        if(icon.equals("flag")){
+            System.out.println(tv.getText());
+            if (tv.getText().toString().equals(getResources().getString(R.string.flag))) {
+                tv.setText("");
+//                tv.setBackgroundColor(Color.YELLOW);
+
+            }
+            else tv.setText(R.string.flag);
+            return;
+        }
+
+        if (tv.getText()=="mine"){
+            tv.setBackgroundColor(Color.RED);
+            //add explosion logic
+        }
         tv.setText(String.valueOf(i)+String.valueOf(j));
         if (tv.getCurrentTextColor() == Color.GRAY) {
             tv.setTextColor(Color.GREEN);

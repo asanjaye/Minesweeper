@@ -3,8 +3,10 @@ package com.example.minesweeper;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.gridlayout.widget.GridLayout;
 
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.LayoutInflater;
@@ -12,6 +14,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import java.security.SecureRandom;
+import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -25,7 +28,9 @@ public class MainActivity extends AppCompatActivity {
     private boolean playerLost = false;
     private boolean playerWon = false;
     private ArrayList<Integer> mines = new ArrayList<Integer>();
+    private ArrayList<Integer> flags = new ArrayList<Integer>();
     private int flagCount = 4;
+
 
 
 
@@ -74,7 +79,6 @@ public class MainActivity extends AppCompatActivity {
         }
 //        running=true;
         runTimer();
-        final TextView flagView = (TextView) findViewById(R.id.textViewFlag);
 
     }
     private void placeMines(){
@@ -143,13 +147,12 @@ public class MainActivity extends AppCompatActivity {
 
     public void onClickTV(View view){
         final TextView flagView = (TextView) findViewById(R.id.textViewFlag);
-        if(playerLost){
-            //add logic
-            return;
-        }
+
+        checkWin();
+
         if(playerWon){
             //add logic
-            return;
+            setPlayerWon();
         }
         running=true;
         TextView tv = (TextView) view;
@@ -162,20 +165,22 @@ public class MainActivity extends AppCompatActivity {
             if (tv.getText().toString().equals(getResources().getString(R.string.flag))) {
                 tv.setText("");
                 flagCount++;
-
+                flags.add(n);
             }
             else if(flagCount>0){tv.setText(R.string.flag); flagCount--;}
+
 
             flagView.setText(String.valueOf(flagCount));
             return;
         }
 
         if (tv.getTag()=="mine"){
+            running = false;
             tv.setBackgroundColor(Color.BLUE);
             for (int mine:mines){
                 cell_tvs.get(mine).setBackgroundColor(Color.BLUE);
             }
-            playerLost=true;
+            setPlayerLost();
         }
         else if (tv.getCurrentTextColor() == Color.GREEN) {
             tv.setBackgroundColor(Color.GRAY);
@@ -188,56 +193,54 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-//    private boolean checkWin(){
-//        for (TextView tv: cell_tvs){
-//            if (tv.getTag()=="mine"){
-//                continue;
+    private void setPlayerWon(){
+        Intent intent = new Intent(MainActivity.this, Results.class);
+        intent.putExtra("seconds", clock);
+        intent.putExtra("game", true);
+        startActivity(intent);
+        finish();
+    }
+    private void setPlayerLost(){
+        Intent intent = new Intent(MainActivity.this, Results.class);
+        intent.putExtra("seconds", clock);
+        intent.putExtra("game", false);
+        startActivity(intent);
+        finish();
+    }
+    private void checkWin(){
+        for (TextView tv: cell_tvs){
+            if (tv.getTag()=="mine"){
+                continue;
+            }
+//            if (!(tv.getCurrentTextColor() == Color.BLACK)){
+//                return;
 //            }
-//            if t
-//        }
-//    }
-//    private void revealEmpty(int idx){
-////        final TextView flagView = (TextView) findViewById(R.id.textViewFlag);
-////        flagView.setText("HOORAY");
-//
-//        Queue<Integer> queue = new LinkedList<>();
-//        queue.add(idx);
-//
-//        while(!queue.isEmpty()){
-//            int curr = queue.remove();
-//            TextView tv = cell_tvs.get(curr);
-//            tv.setBackgroundColor(Color.GRAY);
-//
-//
-//            if (!tv.getText().equals("")){
-//                revealNum(curr);
-//                tv.setBackgroundColor(Color.GRAY);
-//            }
-//            else{
-//                for (int i = -1; i <= 1; i++) {
-//                    for (int j = -1; j <= 1; j++) {
-//                        if (i == 0 && j == 0) continue;  // Skip the current cell
-//
-//                        int newRow = (idx / COLUMN_COUNT) + i;
-//                        int newCol = (idx % COLUMN_COUNT) + j;
-//
-//                        // Make sure the new row and column are valid
-//                        if (newRow >= 0 && newRow < ROW_COUNT && newCol >= 0 && newCol < COLUMN_COUNT) {
-//                            int newIndex = newRow * COLUMN_COUNT + newCol;
-//                            TextView neighborTV = cell_tvs.get(newIndex);
-//
-//                            // Only add the neighbor if it hasn't been revealed yet
-//                            if (neighborTV.getCurrentTextColor() == Color.GREEN && neighborTV.getText().equals("")) {
-//                                queue.add(newIndex);
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//
-//
-//        }
-//    }
+            if (tv.getBackground() instanceof ColorDrawable) {
+                ColorDrawable cd = (ColorDrawable) tv.getBackground();
+                int color = cd.getColor();
+            }
+
+        if(flagCount==0){
+//            setPlayerLost();
+            playerWon=true;
+            playerWon= checkMines();
+            setPlayerWon();
+            if(playerWon){
+                running = false;
+            }
+        }
+    }
+    private boolean checkMines(){
+
+        for (int i : flags){
+            if(!(cell_tvs.get(i).getTag()==("mine"))){
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     private void revealEmpty(int idx) {
         Queue<Integer> queue = new LinkedList<>();
         queue.add(idx);
@@ -274,6 +277,9 @@ public class MainActivity extends AppCompatActivity {
 
                             if (ctv.getText().equals("")) {
                                 queue.add(cIdx);
+                            }
+                            else{
+                                revealNum(cIdx);
                             }
                         }
                     }

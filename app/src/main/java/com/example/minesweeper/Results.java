@@ -27,11 +27,11 @@ public class Results extends AppCompatActivity {
 //        tv.setText("L");
 
     }
-    private void restart(View view){
-        Intent intent = new Intent(Results.this,MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK); // Ensure the back stack is cleared
+    public void restart(View view){
+        Intent intent = new Intent(this,MainActivity.class);
         startActivity(intent);
         finish();
     }
+
 
 }

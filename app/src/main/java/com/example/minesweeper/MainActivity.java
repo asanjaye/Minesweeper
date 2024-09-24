@@ -30,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Integer> mines = new ArrayList<Integer>();
     private ArrayList<Integer> flags = new ArrayList<Integer>();
     private int flagCount = 4;
+    boolean[] visited = new boolean[ROW_COUNT * COLUMN_COUNT];
 
 
 
@@ -87,12 +88,12 @@ public class MainActivity extends AppCompatActivity {
             if(!mines.contains(mineLocation)){
                 mines.add(mineLocation);
 
+
             }
 
             for(int curr:mines) {
                 TextView mineView = cell_tvs.get(curr);
                 mineView.setTag("mine");
-//                mineView.setBackgroundColor(Color.RED);
             }
         }
     }
@@ -148,10 +149,9 @@ public class MainActivity extends AppCompatActivity {
     public void onClickTV(View view){
         final TextView flagView = (TextView) findViewById(R.id.textViewFlag);
 
-        checkWin();
+
 
         if(playerWon){
-            //add logic
             setPlayerWon();
         }
         running=true;
@@ -161,13 +161,16 @@ public class MainActivity extends AppCompatActivity {
         int j = n%COLUMN_COUNT;
 
         if(icon.equals("flag")){
-//            System.out.println(tv.getText());
+
             if (tv.getText().toString().equals(getResources().getString(R.string.flag))) {
                 tv.setText("");
                 flagCount++;
                 flags.add(n);
             }
-            else if(flagCount>0){tv.setText(R.string.flag); flagCount--;}
+            else if(flagCount>0){
+                tv.setText(R.string.flag);
+                flagCount--;
+            }
 
 
             flagView.setText(String.valueOf(flagCount));
@@ -183,15 +186,16 @@ public class MainActivity extends AppCompatActivity {
             setPlayerLost();
         }
         else if (tv.getCurrentTextColor() == Color.GREEN) {
+            visited[n]=true;
             tv.setBackgroundColor(Color.GRAY);
             if(tv.getText().equals("")){
-//                tv.setBackgroundColor(Color.BLUE);
                 revealEmpty(n);
             }
             else{
                 revealNum(n);
             }
         }
+        checkWin();
     }
     private void setPlayerWon(){
         Intent intent = new Intent(MainActivity.this, Results.class);
@@ -208,27 +212,15 @@ public class MainActivity extends AppCompatActivity {
         finish();
     }
     private void checkWin(){
-        for (TextView tv: cell_tvs){
-            if (tv.getTag()=="mine"){
-                continue;
-            }
-//            if (!(tv.getCurrentTextColor() == Color.BLACK)){
-//                return;
-//            }
-            if (tv.getBackground() instanceof ColorDrawable) {
-                ColorDrawable cd = (ColorDrawable) tv.getBackground();
-                int color = cd.getColor();
-            }
-
-        if(flagCount==0){
-//            setPlayerLost();
-            playerWon=true;
-            playerWon= checkMines();
-            setPlayerWon();
-            if(playerWon){
-                running = false;
+        int counter=0;
+        for(int i =0; i<visited.length; ++i){
+            if (!visited[i] && !(cell_tvs.get(i).getTag()=="mine")){
+                return;
             }
         }
+        setPlayerWon();
+//        final TextView flagView = (TextView) findViewById(R.id.textViewFlag);
+//        flagView.setText(String.valueOf(counter));
     }
     private boolean checkMines(){
 
@@ -244,7 +236,7 @@ public class MainActivity extends AppCompatActivity {
     private void revealEmpty(int idx) {
         Queue<Integer> queue = new LinkedList<>();
         queue.add(idx);
-        boolean[] visited = new boolean[ROW_COUNT * COLUMN_COUNT];
+
         visited[idx] = true;
 
         while (!queue.isEmpty()) {
